@@ -18,7 +18,7 @@ def send_mail(test):
     msg['Subject'] = 'Craigslist results'
     msg['From'] = fromaddr
     msg['To'] = toaddr
-    body = "test"
+    body = "\n".join(test)
     msg.attach(MIMEText(body, 'plain'))
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
