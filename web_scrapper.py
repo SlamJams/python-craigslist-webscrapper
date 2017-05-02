@@ -38,11 +38,41 @@ searchBox = driver.find_element_by_css_selector("input[placeholder='search sport
 searchBox.send_keys(search)
 searchBox.submit()
 
-posts = driver.find_elements_by_css_selector(".result-title.hdrlnk")
-test = []
-for post in posts:
-    print(post.text)
-    test.append(post.text)
+driver.find_element_by_css_selector("input[name='hasPic']").click() #click to show only posts with images
+driver.find_element_by_css_selector("input[name='postedToday']").click() #click to show only posts submitted today
+driver.find_element_by_css_selector("input[name='bundleDuplicates']").click() #click to bundle duplicates
 
-send_mail(test)
+item = {'title': '', 'price': 0, 'location': '', 'date-posted': '', 'link': '', 'info': ''}
+items = []
+
+results = driver.find_elements_by_css_selector(".result-row")
+
+for result in results:
+    item['title'] = result.find_element_by_css_selector('.result-title.hdrlnk').text
+    try:
+        item['price'] = int(result.find_element_by_css_selector('.result-price').text.strip('$'))
+    except:
+        item['price'] = 0
+    try:
+        item['location'] = result.find_element_by_css_selector('.result-hood').text
+    except:
+        item['location'] = 'Location not listed.'
+    item['date-posted'] = result.find_element_by_css_selector('.result-date').text
+    temp_str = result.find_element_by_css_selector('.result-date').text
+
+   # newpage = driver.find_element_by_css_selector('.result-title.hdrlnk')
+   # newpage.find_element_by_css_selector('.result-title.hdrlnk').click()
+   # newpage.find_element_by_xpath('//*[@id="postingbody"]/a').click()
+   # item['info'] = newpage.find_element_by_xpath('//*[@id="postingbody"]').text
+   # newpage.execute_script("window.history.go(-1)")
+    items.append(item)
+
+print(items)
+
+#posts_price = driver.find_elements_by_css_selector('.result-price')
+#for post in posts_price:
+#    print(post.text)
+
+
+#send_mail(test)
 driver.close()
