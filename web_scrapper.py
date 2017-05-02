@@ -58,14 +58,17 @@ for result in results:
     except:
         item['location'] = 'Location not listed.'
     item['date-posted'] = result.find_element_by_css_selector('.result-date').text
-    temp_str = result.find_element_by_css_selector('.result-date').text
+    item['link'] = result.find_element_by_css_selector('a').get_attribute('href')
+    items.append(item.copy())
 
-   # newpage = driver.find_element_by_css_selector('.result-title.hdrlnk')
-   # newpage.find_element_by_css_selector('.result-title.hdrlnk').click()
-   # newpage.find_element_by_xpath('//*[@id="postingbody"]/a').click()
-   # item['info'] = newpage.find_element_by_xpath('//*[@id="postingbody"]').text
-   # newpage.execute_script("window.history.go(-1)")
-    items.append(item)
+for link in items:
+    driver.get(link['link'])
+    try:
+        driver.find_element_by_xpath('//*[@id="postingbody"]/a').click()
+    except:
+        pass
+
+    link['info'] = driver.find_element_by_xpath('//*[@id="postingbody"]').text
 
 print(items)
 
