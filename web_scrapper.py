@@ -3,7 +3,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-def send_mail(test):
+def send_mail(items, search):
     fromaddr = 'brian2najera@yahoo.com'
     toaddr = 'brian2najera@gmail.com'
 
@@ -17,7 +17,46 @@ def send_mail(test):
     msg['Subject'] = 'Craigslist results'
     msg['From'] = fromaddr
     msg['To'] = toaddr
-    body = "\n".join(test)
+    #body = "\n".join(test)
+
+    html_slices = []
+    html_slices.append("""
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+</head>
+<body>
+
+<div data-role="page" id="pageone">
+  <div data-role="main" class="ui-content">
+""")
+
+    html_slices.append("<h2>{} results for {} </h2>".format(len(items), search))
+
+    for item in items:
+        html_slices.append('<div data-role="collapsible">')
+        html_slices.append("<h4>{}</h4>".format(item['title']))
+        html_slices.append('<ul data-role="listview">')
+        html_slices.append("<li>{}</li>".format(item['info']))
+        html_slices.append('</ul>')
+        html_slices.append('</div>')
+        html_slices.append('\n')
+
+    html_slices.append("""
+      </div>
+</div> 
+
+</body>
+</html>
+    """)
+
+    html = '\n'.join(html_slices)
+
+
     msg.attach(MIMEText(body, 'plain'))
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
@@ -75,6 +114,7 @@ if not items:
     print('No new items found.')
 else:
     print(items)
+    print('')
 
-#send_mail(test)
+send_mail(items, search)
 driver.close()
