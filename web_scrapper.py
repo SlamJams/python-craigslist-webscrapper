@@ -1,8 +1,8 @@
 from selenium import webdriver
 import smtplib
 import re
-import random
-import time
+from random import randint
+from time import sleep
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -17,8 +17,9 @@ def send_mail(items, search):
 
     msg = MIMEMultipart()
     msg['Subject'] = 'Craigslist results'
-    msg['From'] = fromaddr
+    msg['From'] = login
     msg['To'] = toaddr
+    html_slices = []
     html_slices.append("""
 <!DOCTYPE html>
 <html>
@@ -44,12 +45,12 @@ selector {
 
     html_slices.append("<h2>{} results for {} </h2>".format(len(items), search))
 
-    for item in items: #generating listing html for all the results
+    for item in items: # generating listing html for all the results
         html_slices.append('<div data-role="collapsible">')
         html_slices.append("<h4>{}</h4>".format(item['title']))
         html_slices.append('<ul data-role="listview">')
         html_slices.append("<li>")
-        html_slices.append("{}").format(item['info'])
+        html_slices.append("{}".format(item['info']))
         html_slices.append("</li>")
         html_slices.append('</ul>')
         html_slices.append('</div>')
@@ -82,9 +83,13 @@ searchBox = driver.find_element_by_css_selector("input[placeholder='search for s
 searchBox.send_keys(search)
 searchBox.submit()
 
+sleep(randint(1, 3))
 driver.find_element_by_css_selector("input[name='hasPic']").click()     #click to show only posts with images
+sleep(randint(1, 3))
 driver.find_element_by_css_selector("input[name='postedToday']").click()    #click to show only posts submitted today
+sleep(randint(1, 3))
 driver.find_element_by_css_selector("input[name='bundleDuplicates']").click()    #click to bundle duplicates
+sleep(randint(1, 3))
 driver.find_element_by_xpath("""//*[@id="searchform"]/div[2]/div/ul/li[2]/a""").click()     #click to show posts from only owners
 
 item = {'title': '', 'price': 0, 'location': '', 'date-posted': '', 'link': '', 'info': ''}
@@ -93,7 +98,7 @@ items = []
 results = driver.find_elements_by_css_selector(".result-row")
 
 for result in results: #parsing info from postings
-    time.sleep(randint(5,10))
+    sleep(randint(5,10))
     item['title'] = result.find_element_by_css_selector('.result-title.hdrlnk').text
     try:
         item['price'] = int(result.find_element_by_css_selector('.result-price').text.strip('$'))
@@ -109,14 +114,14 @@ for result in results: #parsing info from postings
 
 for link in items:
     driver.get(link['link'])
-    time.sleep(randint(5,15))
+    sleep(randint(5,15))
     try:
         driver.find_element_by_xpath('//*[@id="postingbody"]/a').click()   #checks if there is a posting info button to click
     except:
         pass
 
-    link['info'] = driver.find_element_by_xpath('//*[@id="postingbody"]').text
-    re.sub(r'(\n)', r'\1<br>', link[info])
+    str = driver.find_element_by_xpath('//*[@id="postingbody"]').text
+    link['info'] = str.replace("\n", "<br>")
 
 if items:   #if array has results then send email.
     send_mail(items, search)
