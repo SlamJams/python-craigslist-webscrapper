@@ -7,6 +7,28 @@ from time import sleep
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import schedule
+import sqlite3
+from datetime import datetime,timedelta
+
+
+def create_table():
+    c.execute('''CREATE TABLE IF NOT EXISTS Item (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                Title   TEXT    NOT NULL,
+                Link    TEXT    NOT NULL,
+                Time_End    Date    NOT NULL
+                );''')
+    conn.commit()
+
+def insert_table(item):
+    time_start = datetime.now()
+    time_end = time_start + timedelta(days=1)
+    c.execute("INSERT INTO item (Title, Link, Time_End) VALUES ( ?, ?, ?)", (item['title'], item['link'], time_end) )
+    conn.commit()
+
+def select_item(item):
+    c.execute("SELECT * FROM items WHERE Link = (?)", (item['link']))
+
 
 def send_mail(items, search):
     toaddr = 'brian2najera@gmail.com'
@@ -113,6 +135,7 @@ selector {
     for item in items:  # generating listing html for all the results
         html_slices.append('<div data-role="collapsible">')
         html_slices.append("<h4><a href=\"{}\">{}</a></h4>".format(item['link'],item['title']))
+        html_slices.append("Price-{} Location-{} Date Posted-{}".format(item['price'], item['location'], item['date-posted']))
         html_slices.append('<ul data-role="listview">')
         html_slices.append("<li>")
         html_slices.append("{}".format(item['info']))
@@ -180,6 +203,7 @@ def main():
 
             item['date-posted'] = result.find_element_by_css_selector('.result-date').text
             item['link'] = result.find_element_by_css_selector('a').get_attribute('href')
+
             items.append(item.copy())
 
     for link in items: #go to each link to grab the description of the item
@@ -199,8 +223,19 @@ def main():
 
     driver.close()
 
-schedule.every(5).minutes.do(main())
 
-while 1:
-    schedule.run_pending()
-    time.sleep(1)
+if __name__ == '__main__':
+    try:
+        conn = sqlite3.connect('items.db')
+        c = conn.cursor()
+    except Error as e:
+        print(e)
+
+    create_table()
+    item = {'title': 'Test', 'price': 10, 'location': '', 'date-posted': '', 'link': 'dsafasdfasdf', 'info': ''}
+    insert_table(item)
+    #schedule.every(5).minutes.do(main)
+    #while 1:
+        #schedule.run_pending()
+        #time.sleep(1)
+    #insert_table()
