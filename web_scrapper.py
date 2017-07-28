@@ -8,7 +8,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import schedule
 import sqlite3
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 
 def create_table():
@@ -20,14 +20,27 @@ def create_table():
                 );''')
     conn.commit()
 
+
 def insert_table(item):
     time_start = datetime.now()
     time_end = time_start + timedelta(days=1)
-    c.execute("INSERT INTO item (Title, Link, Time_End) VALUES ( ?, ?, ?)", (item['title'], item['link'], time_end) )
+    c.execute("INSERT INTO Item (Title, Link, Time_End) VALUES ( ?, ?, ?)", (item['title'], item['link'], time_end))
     conn.commit()
 
+
+def check_if_exists(item):
+    c.execute("SELECT * FROM Item WHERE Link = (?)", (item['link'],))
+    data = c.fetchall()
+    if data:
+        return True
+    else:
+        return False
+
+
 def select_item(item):
-    c.execute("SELECT * FROM items WHERE Link = (?)", (item['link']))
+    c.execute("SELECT * FROM Item WHERE Link = (?)", (item['link'],))
+    data = c.fetchall()
+    print(data)
 
 
 def send_mail(items, search):
@@ -134,7 +147,7 @@ selector {
 
     for item in items:  # generating listing html for all the results
         html_slices.append('<div data-role="collapsible">')
-        html_slices.append("<h4><a href=\"{}\">{}</a></h4>".format(item['link'],item['title']))
+        html_slices.append("<h4><a href=\"{}\">{}</a></h4>".format(item['link'], item['title']))
         html_slices.append("Price-{} Location-{} Date Posted-{}".format(item['price'], item['location'], item['date-posted']))
         html_slices.append('<ul data-role="listview">')
         html_slices.append("<li>")
@@ -166,7 +179,6 @@ def main():
     item = {'title': '', 'price': 0, 'location': '', 'date-posted': '', 'link': '', 'info': ''}
     items = []
 
-
     chrome_path = r"D:\Program Files (x86)\PythonStuff\chromedriver.exe"
     driver = webdriver.Chrome(chrome_path)
     driver.get("https://houston.craigslist.org/")
@@ -183,14 +195,15 @@ def main():
     sleep(randint(1, 3))
     driver.find_element_by_css_selector("input[name='bundleDuplicates']").click()  # click to bundle duplicates
     sleep(randint(1, 3))
-    driver.find_element_by_xpath("""//*[@id="searchform"]/div[2]/div/ul/li[2]/a""").click()  # click to show posts from only owners
+    driver.find_element_by_xpath(
+        """//*[@id="searchform"]/div[2]/div/ul/li[2]/a""").click()  # click to show posts from only owners
 
     results = driver.find_elements_by_css_selector(".result-row")
 
     sleep(randint(5, 10))
     for result in results:  # parsing info from postings
         item['title'] = result.find_element_by_css_selector('.result-title.hdrlnk').text
-        if item['title'] != "": #if title equals an empty string, then its either a duplicate or trash result
+        if item['title'] != "":  # if title equals an empty string, then its either a duplicate or trash result
             try:
                 item['price'] = int(result.find_element_by_css_selector('.result-price').text.strip('$'))
             except:
@@ -204,9 +217,11 @@ def main():
             item['date-posted'] = result.find_element_by_css_selector('.result-date').text
             item['link'] = result.find_element_by_css_selector('a').get_attribute('href')
 
-            items.append(item.copy())
+            if not check_if_exists(item):
+                insert_table(item)
+                items.append(item.copy())
 
-    for link in items: #go to each link to grab the description of the item
+    for link in items:  # go to each link to grab the description of the item
         driver.get(link['link'])
         sleep(randint(5, 15))
         try:
@@ -232,10 +247,7 @@ if __name__ == '__main__':
         print(e)
 
     create_table()
-    item = {'title': 'Test', 'price': 10, 'location': '', 'date-posted': '', 'link': 'dsafasdfasdf', 'info': ''}
-    insert_table(item)
-    #schedule.every(5).minutes.do(main)
-    #while 1:
-        #schedule.run_pending()
-        #time.sleep(1)
-    #insert_table()
+    schedule.every(5).minutes.do(main)
+    while 1:
+        schedule.run_pending()
+        time.sleep(1)
