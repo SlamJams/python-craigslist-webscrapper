@@ -37,12 +37,6 @@ def check_if_exists(item):
         return False
 
 
-def select_item(item):
-    c.execute("SELECT * FROM Item WHERE Link = (?)", (item['link'],))
-    data = c.fetchall()
-    print(data)
-
-
 def send_mail(items, search):
     toaddr = 'brian2najera@gmail.com'
 
@@ -148,7 +142,7 @@ selector {
     for item in items:  # generating listing html for all the results
         html_slices.append('<div data-role="collapsible">')
         html_slices.append("<h4><a href=\"{}\">{}</a></h4>".format(item['link'], item['title']))
-        html_slices.append("Price-{} Location-{} Date Posted-{}".format(item['price'], item['location'], item['date-posted']))
+        html_slices.append("<h5><center>Price-{} Location-{} Date Posted-{}</h5>".format(item['price'], item['location'], item['date-posted']))
         html_slices.append('<ul data-role="listview">')
         html_slices.append("<li>")
         html_slices.append("{}".format(item['info']))
@@ -175,7 +169,7 @@ selector {
 
 
 def main():
-    search = "computer monitors gaming"
+    search = "computer chair"
     item = {'title': '', 'price': 0, 'location': '', 'date-posted': '', 'link': '', 'info': ''}
     items = []
 
@@ -248,6 +242,7 @@ if __name__ == '__main__':
 
     create_table()
     schedule.every(5).minutes.do(main)
+    main()
     while 1:
         schedule.run_pending()
         time.sleep(1)
